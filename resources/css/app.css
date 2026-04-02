@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans;
+    background: linear-gradient(180deg, #FDF6E9 0%, #F5E6D3 100%) !important;
+    min-height: 100vh;
+  }
+}
+
+.font-serif-header {
+    font-family: 'Playfair Display', serif;
+}
