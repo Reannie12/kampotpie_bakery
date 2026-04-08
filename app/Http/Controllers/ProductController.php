@@ -2,43 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    private function adminOnly()
+    {
+        abort_unless(auth()->check() && auth()->user()->isAdmin(), 403, 'Admins only.');
+    }
+
     public function index()
     {
-        // eager load category to avoid N+1 queries
-        $products = Product::with('category')->get();
+        $products = Product::with('category')->latest()->get();
         return view('products.index', compact('products'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
+        $this->adminOnly();
+
         $categories = Category::all();
         return view('products.create', compact('categories'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
+        $this->adminOnly();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric',
             'description' => 'nullable|string',
-            'category_id' => 'required|exists:categories,id', // ✅ fixed
-            'stock' => 'required|integer',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'category_id' => 'required|exists:categories,id',
+            'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
@@ -50,39 +49,31 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Product added successfully!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show($id)
+    public function show(Product $product)
     {
-        $product = Product::findOrFail($id);
+        $product->load('category');
         return view('products.show', compact('product'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
+    public function edit(Product $product)
     {
-        $product = Product::findOrFail($id);
+        $this->adminOnly();
+
         $categories = Category::all();
         return view('products.edit', compact('product', 'categories'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
+    public function update(Request $request, Product $product)
     {
-        $product = Product::findOrFail($id);
+        $this->adminOnly();
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric',
             'description' => 'nullable|string',
-            'category_id' => 'required|exists:categories,id', // ✅ fixed
-            'stock' => 'required|integer',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'category_id' => 'required|exists:categories,id',
+            'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
@@ -94,12 +85,10 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Product updated successfully!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
+    public function destroy(Product $product)
     {
-        $product = Product::findOrFail($id);
+        $this->adminOnly();
+
         $product->delete();
 
         return redirect()->route('products.index')->with('success', 'Product deleted successfully!');

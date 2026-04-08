@@ -1,17 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply font-sans;
-    background: linear-gradient(180deg, #FDF6E9 0%, #F5E6D3 100%) !important;
-    min-height: 100vh;
-  }
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: linear-gradient(180deg, #fffaf5 0%, #f7eadf 100%);
+        min-height: 100vh;
+        color: #4b2e2b;
+    }
 }
 
-.font-serif-header {
+.font-display {
     font-family: 'Playfair Display', serif;
 }

@@ -1,74 +1,116 @@
-@extends('layouts.app')
+@extends(auth()->check() && auth()->user()->isAdmin() ? 'layouts.admin' : 'layouts.app')
 
 @section('content')
-<div class="min-h-screen">
-    <div class="max-w-7xl mx-auto px-6 pt-12 pb-24 flex flex-col md:flex-row items-center">
-        <div class="md:w-1/2 space-y-6">
-            <h1 class="text-6xl font-serif-header text-[#1a1a1a]">
-                 Sweet Moments Start Here
-            </h1>
-            <p class="text-gray-500 text-lg max-w-sm leading-relaxed">
-                Discover Kampot’s finest pies and ice cream, crafted with love and tradition.
+<section class="max-w-7xl mx-auto px-2 sm:px-4 py-8">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+        <div>
+            <p class="uppercase tracking-[0.3em] text-sm text-[#c06c52] font-semibold">
+                {{ auth()->check() && auth()->user()->isAdmin() ? 'Menu Management' : 'Order Online' }}
             </p>
-            <div class="flex items-center space-x-4 pt-4">
-                <a href="{{ route('products.index') }}" class="px-8 py-3 bg-[#5c3d2e] text-white rounded-full font-medium hover:scale-105 transition shadow-lg">
-                    Shop Now
-                </a>
-                <span class="text-[#5c3d2e] font-bold cursor-pointer">→ Explore More</span>
-            </div>
-        </div>
-
-        <div class="md:w-1/2 mt-12 md:mt-0 relative flex justify-center">
-            <img src="/images/hero-cake.jpg" class="w-full max-w-[500px] object-contain drop-shadow-2xl" alt="Bakery Hero">
+            <h1 class="font-display text-4xl md:text-5xl text-[#4b2e2b] mt-3">Our Menu</h1>
+            <p class="text-[#7a5c55] max-w-xl mt-3 text-base">
+                {{ auth()->check() && auth()->user()->isAdmin() ? 'Add, update, and delete bakery items from here.' : 'Fresh bakery, coffee, and ice cream — ready to order.' }}
+            </p>
         </div>
     </div>
 
-    <div class="bg-white/30 backdrop-blur-sm py-20 rounded-t-[3rem]">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-serif-header text-[#1a1a1a]">Our Specialties</h2>
-                <p class="text-gray-500 mt-2">Pick your favorite treat</p>
-            </div>
+    @if(session('success'))
+        <div class="mb-6 rounded-xl bg-green-100 px-4 py-3 text-green-700 font-medium">
+            {{ session('success') }}
+        </div>
+    @endif
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                @foreach($products as $product)
-                    <div class="bg-white rounded-[2.5rem] p-4 shadow-sm border border-orange-50/50 hover:shadow-xl transition-all group">
-                        <div class="bg-[#FDF6E9] rounded-[2rem] overflow-hidden mb-6">
-                            @if($product->image)
-                                <img src="{{ asset('storage/'.$product->image) }}" class="w-full h-64 object-cover group-hover:scale-110 transition duration-700" alt="{{ $product->name }}">
-                            @else
-                                <img src="{{ asset('images/placeholder.png') }}" class="w-full h-64 object-cover" alt="No image">
-                            @endif
+    @if(session('error'))
+        <div class="mb-6 rounded-xl bg-red-100 px-4 py-3 text-red-700 font-medium">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @if($products->count())
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            @foreach($products as $product)
+                <div class="bg-white border border-[#eadfd6] rounded-2xl shadow-sm overflow-hidden">
+                    <div class="flex items-center gap-4 p-4">
+                        <div class="shrink-0">
+                            <img
+                                src="{{ $product->image_url }}"
+                                alt="{{ $product->name }}"
+                                class="w-28 h-28 rounded-xl object-cover"
+                                onerror="this.src='{{ asset('image/logokampotpie.jpg') }}'">
                         </div>
 
-                        <div class="px-4 pb-4">
-                            <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between gap-3">
                                 <div>
-                                    <h3 class="text-xl font-bold text-[#1a1a1a]">{{ $product->name }}</h3>
-                                    <p class="text-gray-400 text-sm italic">Freshly Baked</p>
+                                    <h2 class="text-xl font-bold text-[#4b2e2b] leading-tight">{{ $product->name }}</h2>
+                                    @if($product->category)
+                                        <p class="text-sm text-[#a67c6b] mt-1">{{ $product->category->name }}</p>
+                                    @endif
                                 </div>
-                                <span class="bg-[#fdf6e9] text-[#5c3d2e] font-bold px-3 py-1 rounded-full text-sm">
+
+                                <span class="text-lg font-bold text-[#c06c52] whitespace-nowrap">
                                     ${{ number_format($product->price, 2) }}
                                 </span>
                             </div>
 
-                            <div class="flex items-center justify-between mt-6 border-t border-gray-50 pt-4">
-                                <div class="flex space-x-4">
-                                    <a href="{{ route('products.edit', $product->id) }}" class="text-xs font-bold text-gray-400 hover:text-yellow-600 uppercase tracking-tighter">Edit</a>
-                                    <form action="{{ route('products.destroy', $product->id) }}" method="POST">
-                                        @csrf @method('DELETE')
-                                        <button class="text-xs font-bold text-gray-400 hover:text-red-600 uppercase tracking-tighter">Delete</button>
-                                    </form>
-                                </div>
-                                <a href="{{ route('products.show', $product->id) }}" class="w-10 h-10 bg-[#5c3d2e] text-white rounded-full flex items-center justify-center hover:bg-black transition">
-                                    →
+                            <p class="text-sm text-[#6f554e] mt-2 line-clamp-2">
+                                {{ $product->description ?? 'Fresh and delicious bakery item.' }}
+                            </p>
+
+                            <p class="text-xs font-semibold text-[#8a6c63] mt-2">
+                                Stock: {{ $product->stock }}
+                            </p>
+
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="{{ route('products.show', $product->id) }}"
+                                   class="inline-flex items-center justify-center rounded-xl border border-[#d9c2b1] px-4 py-2 text-sm font-semibold text-[#4b2e2b] hover:bg-[#fff8f3] transition">
+                                    View
                                 </a>
+
+                                @auth
+                                    @if(auth()->user()->isAdmin())
+                                        <a href="{{ route('admin.products.edit', $product->id) }}"
+                                           class="rounded-xl bg-[#fff2e9] px-4 py-2 text-sm font-semibold text-[#8b5e3c] hover:bg-[#ffe8d8] transition">
+                                            Update
+                                        </a>
+
+                                        <form action="{{ route('admin.products.destroy', $product->id) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Delete this product?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 transition">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    @endif
+                                @else
+                                    <a href="{{ route('login') }}"
+                                       class="rounded-xl bg-[#8b5e3c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#71482c] transition">
+                                        Login to Order
+                                    </a>
+                                @endauth
                             </div>
                         </div>
                     </div>
-                @endforeach
-            </div>
+                </div>
+            @endforeach
         </div>
-    </div>
-</div>
+    @else
+        <div class="rounded-2xl bg-white px-8 py-16 text-center shadow-sm">
+            <h2 class="text-2xl font-bold text-[#4b2e2b]">No products available yet</h2>
+            <p class="text-[#7a5c55] mt-3">Please check back later.</p>
+
+            @auth
+                @if(auth()->user()->isAdmin())
+                    <a href="{{ route('admin.products.create') }}"
+                       class="inline-flex mt-6 rounded-full bg-[#8b5e3c] px-6 py-3 text-sm font-semibold text-white hover:bg-[#71482c] transition">
+                        Add First Product
+                    </a>
+                @endif
+            @endauth
+        </div>
+    @endif
+</section>
 @endsection
